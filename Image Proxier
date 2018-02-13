@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Image Proxier
-// @version      1.1
+// @version      1.2
 // @description  Replaces images from stack.imgur.com and collates them
 // @author       GrumpyCrouton
 // @match        *://*.stackoverflow.com/*
@@ -29,7 +29,7 @@ modal.style.marginLeft = "-400px";
 modal.style.marginTop = "-300px";
 modal.style.border = "2px outset #52575b";
 modal.style.zIndex = 999;
-modal.style.padding = "5px"
+modal.style.padding = "5px";
 modal.style.background = "white";
 modal.style.display = "none";
 
