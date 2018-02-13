@@ -1,9 +1,11 @@
 // ==UserScript==
 // @name         Image Proxier
-// @version      1.2
+// @namespace    https://github.com/GrumpyCrouton/Userscripts
+// @version      1.1
 // @description  Replaces images from stack.imgur.com and collates them
 // @author       GrumpyCrouton
 // @match        *://*.stackoverflow.com/*
+// @update       https://greasyfork.org/scripts/38427-image-proxier/code/Image%20Proxier.user.js
 // ==/UserScript==
 
 // OPTIONS
