@@ -1,22 +1,19 @@
 // ==UserScript==
 // @name         Image Proxier
-// @version      1.0
-// @description  Replaces images from stack.imgur.com
+// @version      1.1
+// @description  Replaces images from stack.imgur.com and collates them
 // @author       GrumpyCrouton
 // @match        *://*.stackoverflow.com/*
-// @grant        none
-// @update 
 // ==/UserScript==
+
 // OPTIONS
 var convertImages = true;
 var convertLinks = true;
 
+var addProxy = true;
+
 var proxy = "http://web.archive.org/web/";
 var matchURLs = ["https://i.stack.imgur.com/", "https://i.imgur.com/"];
-
-
-var thumbnailHeight = 50;
-var thumbnailWidth = 50;
 
 
 // DO NOT ALTER BELOW THIS LINE
@@ -32,68 +29,77 @@ modal.style.marginLeft = "-400px";
 modal.style.marginTop = "-300px";
 modal.style.border = "2px outset #52575b";
 modal.style.zIndex = 999;
-modal.style.padding = "5px";
+modal.style.padding = "5px"
 modal.style.background = "white";
 modal.style.display = "none";
 
-modal.innerHTML = "" +
-    "<div style='width:100%;text-align:right;'>" +
-    "<strong><div id='image-proxier-close' style='cursor:pointer;'>X</div></strong>" +
-    "</div>" +
-    "<div style='width:100%;text-align:right;overflow:auto;'>" +
-    "<img id='image-proxier-magnif'></img>" +
-    "</div>";
+modal.innerHTML = " 																	\
+	<div style='width:100%;text-align:right;'>											\
+		<strong><div id='image-proxier-close' style='cursor:pointer;'>X</div></strong>	\
+	</div>																				\
+	<div style='width:100%;text-align:right;overflow:auto;'>											\
+		<img id='image-proxier-magnif'></img>											\
+	</div>																				\
+";
 
 document.getElementsByTagName("BODY")[0].appendChild(modal);
 
-if (convertImages) {
+if(convertImages) {
     var allImages = document.getElementsByTagName('img');
-    for (var i = 0; i < allImages.length; i++) {
+    for(var i = 0; i < allImages.length ; i++) {
         var sImage = allImages[i];
         var result = containsAny(sImage.src, matchURLs);
-        if (result) {
-            sImage.src = proxy + sImage.src;
+        if(result) {
+			if(addProxy) {
+				sImage.src = proxy + sImage.src;
+			}
         }
     }
 }
 
-if (convertLinks) {
+if(convertLinks) {
     var links = document.getElementsByTagName('a');
-    for (var i = 0; i < links.length; i++) {
+    for(var i = 0; i < links.length ; i++) {
         var matches = containsAny(links[i].href, matchURLs);
-        if (matches) {
+        if(matches) {
             //link variables
             var link = links[i];
             var linkParent = links[i].parentNode;
 
             //create <img> element
             var image = document.createElement("img");
-            image.src = proxy + link.href;
+            if(addProxy) {
+				image.src = proxy + link.href;
+			} else {
+				image.src = link.href;
+			}
             image.style.height = "auto";
             image.style.width = "75px";
-            image.style.border = "2px outset #52575b";
+			image.style.border = "2px outset #52575b";
 
             //alter <a> element
-            link.setAttribute("link", proxy + link.href);
-            link.href = "";
-            link.classList.add("image-proxier-image");
+			if(addProxy) {
+				link.setAttribute("link", proxy + link.href);
+			}            
+			link.href = "";
+			link.classList.add("image-proxier-image");
             link.innerHTML = "";
             link.style.borderBottom = "none";
-            link.style.paddingRight = "3px";
+			link.style.paddingRight = "3px";
 
             //attach <img> to <a>
             link.append(image);
 
             result = linkParent.querySelector('.imageContainer');
-            if (!result) {
+            if(!result) {
                 //create imageContainer (div) element
                 var container = document.createElement("div");
                 container.classList.add("imageContainer");
-                container.style.backgroundColor = "#d4d4d4";
+				container.style.backgroundColor = "#d4d4d4";
 
-                container.style.padding = "3px";
+				container.style.padding = "3px";
                 linkParent.prepend(container);
-                container.prepend(scriptName());
+				container.prepend(scriptName());
             }
             //append image to container that exists from last check
             linkParent.querySelector(".imageContainer").appendChild(link);
@@ -101,22 +107,23 @@ if (convertLinks) {
     }
 }
 
-$("#image-proxier-close").click(function() {
-    $("#image-proxier-modal").hide();
-    return false;
+$("#image-proxier-close").click(function(){
+	$("#image-proxier-modal").hide();
+	return false;
 });
 
-$(".image-proxier-image").click(function() {
-    var proxierImage = document.querySelector("#image-proxier-magnif");
-    proxierImage.src = $(this).attr('link');
-    proxierImage.style.width = "800px";
-    proxierImage.style.height = "auto";
-    proxierImage.style.maxHeight = "550px";
-    $("#image-proxier-modal").show();
-    return false;
+$(".image-proxier-image").click(function(){
+	var proxierImage = document.querySelector("#image-proxier-magnif");
+	proxierImage.src = $(this).attr('link');
+	proxierImage.style.width = "800px";
+	proxierImage.style.height = "auto";
+	proxierImage.style.maxHeight = "550px";
+	$("#image-proxier-modal").show();
+	return false;
 });
 
-$(document).mouseup(function(e) {
+$(document).mouseup(function(e) 
+{
     var container = $("#image-proxier-modal");
 
     // if the target of the click isn't the container nor a descendant of the container
@@ -126,18 +133,18 @@ $(document).mouseup(function(e) {
 });
 
 function scriptName() {
-    var node = document.createElement("div");
-    node.style.fontSize = "10px";
-    node.style.width = "100%";
-    node.innerHTML = "<center><a href='https://github.com/GrumpyCrouton/Userscripts' target='_blank'>Image Proxier</a></center>";
-    return node;
+	var node = document.createElement("div");
+	node.style.fontSize = "10px";
+	node.style.width = "100%";
+	node.innerHTML = "<center><a href='https://github.com/GrumpyCrouton/Userscripts' target='_blank'>Image Proxier</a></center>";
+	return node;
 }
 
 function containsAny(str, substrings) {
-    for (var i = 0; i < substrings.length; i++) {
-        if (str.startsWith(substrings[i])) {
-            return true;
-        }
-    }
-    return false;
+	for (var i = 0; i < substrings.length; i++) {
+		if(str.startsWith(substrings[i])) {
+			return true;
+		}
+	}
+	return false;
 }
