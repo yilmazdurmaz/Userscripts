@@ -1,20 +1,21 @@
 // ==UserScript==
 // @name         Image Proxier
 // @namespace    https://github.com/GrumpyCrouton/Userscripts
-// @version      1.1
+// @version      1.2
 // @description  Replaces images from stack.imgur.com and collates them
 // @author       GrumpyCrouton
 // @match        *://*.stackoverflow.com/*
-// @update       https://greasyfork.org/scripts/38427-image-proxier/code/Image%20Proxier.user.js
 // ==/UserScript==
 
 // OPTIONS
 var convertImages = true;
 var convertLinks = true;
 
+var frequencyInSeconds = 5;
+
 var addProxy = true;
 
-var proxy = "http://web.archive.org/web/";
+var proxy = "https://web.archive.org/web/";
 var matchURLs = ["https://i.stack.imgur.com/", "https://i.imgur.com/"];
 
 
@@ -47,19 +48,27 @@ modal.innerHTML = " 																	\
 document.getElementsByTagName("BODY")[0].appendChild(modal);
 
 if(convertImages) {
+    replaceImages();
+}
+
+function replaceImages() {
     var allImages = document.getElementsByTagName('img');
     for(var i = 0; i < allImages.length ; i++) {
         var sImage = allImages[i];
         var result = containsAny(sImage.src, matchURLs);
         if(result) {
-			if(addProxy) {
-				sImage.src = proxy + sImage.src;
-			}
+            if(addProxy) {
+                sImage.src = proxy + sImage.src;
+            }
         }
     }
 }
 
 if(convertLinks) {
+    replaceLinks();
+}
+
+function replaceLinks() {
     var links = document.getElementsByTagName('a');
     for(var i = 0; i < links.length ; i++) {
         var matches = containsAny(links[i].href, matchURLs);
@@ -71,23 +80,23 @@ if(convertLinks) {
             //create <img> element
             var image = document.createElement("img");
             if(addProxy) {
-				image.src = proxy + link.href;
-			} else {
-				image.src = link.href;
-			}
+                image.src = proxy + link.href;
+            } else {
+                image.src = link.href;
+            }
             image.style.height = "auto";
             image.style.width = "75px";
-			image.style.border = "2px outset #52575b";
+            image.style.border = "2px outset #52575b";
 
             //alter <a> element
-			if(addProxy) {
-				link.setAttribute("link", proxy + link.href);
-			}            
-			link.href = "";
-			link.classList.add("image-proxier-image");
+            if(addProxy) {
+                link.setAttribute("link", proxy + link.href);
+            }
+            link.href = "";
+            link.classList.add("image-proxier-image");
             link.innerHTML = "";
             link.style.borderBottom = "none";
-			link.style.paddingRight = "3px";
+            link.style.paddingRight = "3px";
 
             //attach <img> to <a>
             link.append(image);
@@ -97,11 +106,11 @@ if(convertLinks) {
                 //create imageContainer (div) element
                 var container = document.createElement("div");
                 container.classList.add("imageContainer");
-				container.style.backgroundColor = "#d4d4d4";
+                container.style.backgroundColor = "#d4d4d4";
 
-				container.style.padding = "3px";
+                container.style.padding = "3px";
                 linkParent.prepend(container);
-				container.prepend(scriptName());
+                container.prepend(scriptName());
             }
             //append image to container that exists from last check
             linkParent.querySelector(".imageContainer").appendChild(link);
@@ -124,7 +133,7 @@ $(".image-proxier-image").click(function(){
 	return false;
 });
 
-$(document).mouseup(function(e) 
+$(document).mouseup(function(e)
 {
     var container = $("#image-proxier-modal");
 
@@ -150,3 +159,14 @@ function containsAny(str, substrings) {
 	}
 	return false;
 }
+
+setInterval(function() {
+    if(convertImages) {
+        replaceImages();
+        //console.log("Running image replacements.");
+    }
+    if(convertLinks) {
+        replaceLinks();
+        //console.log("Running link replacements.");
+    }
+}, frequencyInSeconds * 1000); // 60 * 1000 milsec
