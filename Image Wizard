@@ -1,1 +1,162 @@
+// ==UserScript==
+// @name         Image Wizard
+// @namespace    https://github.com/GrumpyCrouton/Userscripts
+// @version      1.0
+// @description  Does some magic with images.
+// @author       GrumpyCrouton
+// @match        *://*.stackoverflow.com/*
+// @match        *://*.stackexchange.com/*
+// @match        *://*.superuser.com/*
+// @grant        GM.xmlHttpRequest
+// ==/UserScript==
 
+var proxy = "http://service.bypass123.com/index.php";
+var replaceFrom = ["imgur.com", "facebook.com"];
+var processEvery = 5; //process every x seconds (Useful until I can figure out how to detect when a new image or link is added to DOM. Set to 0 to disable.
+
+/* DEBUG */
+var debugImg = false;
+var debugA = false;
+var debug = false;
+
+
+/* INTERNAL VARIABLES */
+var supportedExtensions = ["png", "jpg", "gif"];
+
+
+//DO NOT ALTER BELOW THIS LINE
+
+(function() {
+
+    process();
+
+    function handleImgTag() {
+        $('img').each(function() {
+            url = $(this).prop('src').split('?').shift();
+			extension = url.split('.').pop();
+            if (replaceFrom.some(function(v) {
+                    return url.indexOf(v) >= 0;
+                }) && supportedExtensions.some(function(v) {
+                    return url.indexOf(v) >= 0;
+                })) {
+                if (!$(this).attr('processed')) {
+                    $(this).attr('processed', true);
+                    replaceImg(url, $(this));
+                }
+                return true;
+            }
+            if (debugImg) console.log("No URL match in <img>: " + url);
+        });
+    }
+
+    function handleATag() {
+        $('a').each(function() {
+            url = $(this).prop('href').split('?').shift();
+			extension = url.split('.').pop();
+            if (replaceFrom.some(function(v) {
+                    return url.indexOf(v) >= 0;
+                }) && supportedExtensions.some(function(v) {
+                    return url.indexOf(v) >= 0;
+                })) {
+                if ($(this).has('img').length < 1) {
+                    replaceA(url, $(this));
+                    return true;
+                }
+            }
+            if (debugA) console.log("No URL match in <a>: " + url);
+        });
+    }
+
+    function replaceImg(src, element) {
+        GM.xmlHttpRequest({
+            method: "POST",
+            url: proxy,
+            data: "url=" + src,
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            onload: function(response) {
+                element.prop('src', response.finalUrl);
+                element.prop('alt', "Image replaced by Image Wizard");
+
+                parent_link = element.parent("a");
+                if (parent_link.length) {
+                    if (parent_link.prop('href') == src) {
+                        parent_link.prop('href', response.finalUrl);
+                        parent_link.prop('target', "_blank");
+                    }
+                } else {
+                    element.wrap("<a href='" + response.finalUrl + "' target='_blank'></a>");
+                }
+                element = element.parent();
+
+                if (element.parents('.post-text').length) {
+                    wrapContentElement(element);
+                } else {
+                    wrapDefaultElement(element);
+                }
+            }
+        });
+    }
+
+    function replaceA(src, element, addImg = true) {
+        GM.xmlHttpRequest({
+            method: "POST",
+            url: proxy,
+            data: "url=" + src,
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            onload: function(response) {
+                if (element.parents('.post-text').length) {
+                    element.text("");
+                    element.append("<img src='" + response.finalUrl + "'></img>");
+                    wrapContentElement(element);
+                } else {
+                    element.text("[Image Wizard");
+                    element.wrap("<span></span>").parent('span').append("<a href='https://github.com/GrumpyCrouton/Userscripts/blob/master/Image%20Wizard'>]</a>");
+                }
+                element.prop('href', response.finalUrl).prop('target', "_blank");
+            }
+        });
+    }
+
+    function wrapContentElement(element) {
+        element.wrap("<div class='module community-bulletin image-proxier'></div>");
+        element = element.parent(".image-proxier");
+        element.prepend("\
+			<div class='bulletin-title'>\
+				<center>\
+					<a \
+					style='text-decoration:none;' \
+					href='https://github.com/GrumpyCrouton/Userscripts/blob/master/Image%20Wizard'>\
+						Image Wizard\
+					</a>\
+				</center>\
+			</div>\
+			<hr>");
+    }
+
+    function wrapDefaultElement(element) {
+        element.wrap("<span></span>");
+    }
+
+	function process() {
+		if(debug) console.log("Processing page.");
+		handleImgTag();
+		handleATag();
+	}
+	
+    $('img').on('load', function() {
+        handleImgTag();
+    });
+
+    $('a').on('load', function() {
+        handleATag();
+    });
+	
+	if(processEvery > 0) {
+		setInterval (process, processEvery * 1000);
+	}
+
+})();
