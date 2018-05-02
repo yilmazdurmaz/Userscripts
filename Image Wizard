@@ -8,7 +8,7 @@
 // @match        *://*.stackexchange.com/*
 // @match        *://*.superuser.com/*
 // @require  https://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js
-// @require  https://gist.github.com/raw/2625891/waitForKeyElements.js
+// @require https://greasyfork.org/scripts/48306-waitforkeyelements/code/waitForKeyElements.js?version=275769
 // @grant        GM.xmlHttpRequest
 // @grant    GM_addStyle
 // @grant    GM.getValue
