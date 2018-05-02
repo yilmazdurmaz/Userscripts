@@ -1,30 +1,31 @@
 // ==UserScript==
 // @name         Image Wizard
 // @namespace    https://github.com/GrumpyCrouton/Userscripts
-// @version      1.0
+// @version      1.5
 // @description  Does some magic with images.
 // @author       GrumpyCrouton
 // @match        *://*.stackoverflow.com/*
 // @match        *://*.stackexchange.com/*
 // @match        *://*.superuser.com/*
+// @require  https://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js
+// @require  https://gist.github.com/raw/2625891/waitForKeyElements.js
 // @grant        GM.xmlHttpRequest
+// @grant    GM_addStyle
+// @grant    GM.getValue
 // ==/UserScript==
-
 var proxy = "http://service.bypass123.com/index.php";
 var replaceFrom = ["imgur.com", "facebook.com"];
-var processEvery = 5; //process every x seconds (Useful until I can figure out how to detect when a new image or link is added to DOM. Set to 0 to disable.
+
+var processEvery = 0;
+//proces every x seconds (Useful until I can figure out how to detect when a new image or link is added to DOM. Set to 0 to disable.
+//There is an automated way built into the script, processEvery is deprecated since v1.5 but can still be used if the automated method is not working for you.
 
 /* DEBUG */
 var debugImg = false;
 var debugA = false;
 var debug = false;
 
-
-/* INTERNAL VARIABLES */
 var supportedExtensions = ["png", "jpg", "gif"];
-
-
-//DO NOT ALTER BELOW THIS LINE
 
 (function() {
 
@@ -146,7 +147,7 @@ var supportedExtensions = ["png", "jpg", "gif"];
 		handleImgTag();
 		handleATag();
 	}
-	
+
     $('img').on('load', function() {
         handleImgTag();
     });
@@ -154,9 +155,30 @@ var supportedExtensions = ["png", "jpg", "gif"];
     $('a').on('load', function() {
         handleATag();
     });
-	
-	if(processEvery > 0) {
+
+	if(processEvery) {
 		setInterval (process, processEvery * 1000);
 	}
+
+    waitForKeyElements ("img", loadHandling);
+
+    function loadHandling (jNode) {
+        if (jNode[0].complete) {
+            handlePostLoadedImg (jNode);
+        }
+        else {
+            jNode.on ('load', handlePostLoadedImg);
+        }
+    }
+    function handlePostLoadedImg (jNodeOrEvent) {
+        var newImg;  //  will be jQuery node
+        if (jNodeOrEvent instanceof jQuery) {
+            newImg = jNodeOrEvent;
+        }
+        else {
+            newImg = $(jNodeOrEvent.target);
+        }
+        handleImgTag();
+    }
 
 })();
